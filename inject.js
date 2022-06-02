@@ -155,9 +155,8 @@ function getKeyBindings(action, what = "value") {
 }
 
 function setKeyBindings(action, value) {
-  tc.settings.keyBindings.find((item) => item.action === action)[
-    "value"
-  ] = value;
+  tc.settings.keyBindings.find((item) => item.action === action)["value"] =
+    value;
 }
 
 function defineVideoController() {
@@ -306,10 +305,9 @@ function defineVideoController() {
     }">
           <span data-action="drag" class="draggable">${speed}</span>
           <span id="controls">
-            <button data-action="rewind" class="rw">«</button>
             <button data-action="slower">&minus;</button>
+            <button data-action="reset">=</button>
             <button data-action="faster">&plus;</button>
-            <button data-action="advance" class="rw">»</button>
             <button data-action="display" class="hideButton">&times;</button>
           </span>
         </div>
@@ -350,6 +348,7 @@ function defineVideoController() {
     var fragment = document.createDocumentFragment();
     fragment.appendChild(wrapper);
 
+    let p;
     switch (true) {
       case location.hostname == "www.amazon.com":
       case location.hostname == "www.reddit.com":
@@ -361,13 +360,24 @@ function defineVideoController() {
         // this is a monstrosity but new FB design does not have *any*
         // semantic handles for us to traverse the tree, and deep nesting
         // that we need to bubble up from to get controller to stack correctly
-        let p = this.parent.parentElement.parentElement.parentElement
-          .parentElement.parentElement.parentElement.parentElement;
+        p =
+          this.parent.parentElement.parentElement.parentElement.parentElement
+            .parentElement.parentElement.parentElement;
         p.insertBefore(fragment, p.firstChild);
         break;
       case location.hostname == "tv.apple.com":
         // insert before parent to bypass overlay
-        this.parent.parentNode.insertBefore(fragment, this.parent.parentNode.firstChild);
+        this.parent.parentNode.insertBefore(
+          fragment,
+          this.parent.parentNode.firstChild
+        );
+        break;
+      case location.hostname == "m.youtube.com":
+        // this is a monstrosity but new FB design does not have *any*
+        // semantic handles for us to traverse the tree, and deep nesting
+        // that we need to bubble up from to get controller to stack correctly
+        p = this.parent.parentElement.parentElement;
+        p.insertBefore(fragment, p.firstChild);
         break;
       default:
         // Note: when triggered via a MutationRecord, it's possible that the
@@ -443,8 +453,7 @@ function setupListener() {
   function updateSpeedFromEvent(video) {
     // It's possible to get a rate change on a VIDEO/AUDIO that doesn't have
     // a video controller attached to it.  If we do, ignore it.
-    if (!video.vsc)
-      return;
+    if (!video.vsc) return;
     var speedIndicator = video.vsc.speedIndicator;
     var src = video.currentSrc;
     var speed = Number(video.playbackRate.toFixed(2));
@@ -491,6 +500,10 @@ function setupListener() {
     },
     true
   );
+}
+
+function listenOnContext(document) {
+  document.addEventListener("contextmenu", () => showAllControl(), true);
 }
 
 function initializeWhenReady(document) {
@@ -542,6 +555,7 @@ function getShadow(parent) {
 
 function initializeNow(document) {
   log("Begin initializeNow", 5);
+
   if (!tc.settings.enabled) return;
   // enforce init-once due to redundant callers
   if (!document.body || document.body.classList.contains("vsc-initialized")) {
@@ -552,6 +566,8 @@ function initializeNow(document) {
   } catch {
     // no operation
   }
+  listenOnContext(document);
+
   document.body.classList.add("vsc-initialized");
   log("initializeNow: vsc-initialized added to document body", 5);
 
@@ -663,19 +679,19 @@ function initializeNow(document) {
             case "attributes":
               if (
                 (mutation.target.attributes["aria-hidden"] &&
-                mutation.target.attributes["aria-hidden"].value == "false")
-                || mutation.target.nodeName === 'APPLE-TV-PLUS-PLAYER'
+                  mutation.target.attributes["aria-hidden"].value == "false") ||
+                mutation.target.nodeName === "APPLE-TV-PLUS-PLAYER"
               ) {
                 var flattenedNodes = getShadow(document.body);
-                var nodes = flattenedNodes.filter(
-                  (x) => x.tagName == "VIDEO"
-                );
+                var nodes = flattenedNodes.filter((x) => x.tagName == "VIDEO");
                 for (let node of nodes) {
                   // only add vsc the first time for the apple-tv case (the attribute change is triggered every time you click the vsc)
-                  if (node.vsc && mutation.target.nodeName === 'APPLE-TV-PLUS-PLAYER')
+                  if (
+                    node.vsc &&
+                    mutation.target.nodeName === "APPLE-TV-PLUS-PLAYER"
+                  )
                     continue;
-                  if (node.vsc)
-                    node.vsc.remove();
+                  if (node.vsc) node.vsc.remove();
                   checkForVideo(node, node.parentNode || mutation.target, true);
                 }
               }
@@ -732,6 +748,15 @@ function setSpeed(video, speed) {
   tc.settings.lastSpeed = speed;
   refreshCoolDown();
   log("setSpeed finished: " + speed, 5);
+}
+
+function showAllControl() {
+  var mediaTags = tc.mediaElements;
+  mediaTags.forEach(function (v) {
+    var controller = v.vsc.div;
+    controller.classList.add("vsc-manual");
+    controller.classList.toggle("vsc-hidden");
+  });
 }
 
 function runAction(action, value, e) {
