@@ -305,10 +305,11 @@ function defineVideoController() {
     }">
           <span data-action="drag" class="draggable">${speed}</span>
           <span id="controls">
+            <button data-action="rewind">&lt;</button>
             <button data-action="slower">&minus;</button>
             <button data-action="reset">=</button>
             <button data-action="faster">&plus;</button>
-            <button data-action="display" class="hideButton">&times;</button>
+            <button data-action="advance">&gt;</button>
           </span>
         </div>
       `;
@@ -377,6 +378,17 @@ function defineVideoController() {
         // semantic handles for us to traverse the tree, and deep nesting
         // that we need to bubble up from to get controller to stack correctly
         p = this.parent.parentElement.parentElement;
+        p.insertBefore(fragment, p.firstChild);
+        break;
+      case location.hostname == "sp.nicovideo.jp":
+      case location.hostname == "www.nicovideo.jp":
+        p = this.parent.parentElement.parentElement;
+        p.insertBefore(fragment, p.firstChild);
+        break;
+      case location.hostname == "tver.jp":
+        p =
+          this.parent.parentElement.parentElement.parentElement.parentElement
+            .parentElement;
         p.insertBefore(fragment, p.firstChild);
         break;
       default:
