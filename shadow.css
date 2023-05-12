@@ -17,7 +17,6 @@
   color: white;
 
   border-radius: 6px;
-  padding: 4px;
   margin: 10px 10px 10px 15px;
 
   cursor: default;
@@ -52,12 +51,13 @@ button {
   background: white;
   font-weight: normal;
   border-radius: 5px;
-  padding: 1px 5px 3px 5px;
-  font-size: 14px;
-  line-height: 14px;
+  padding: 0px 5px 5px 5px;
+  font-size: 24px;
+  line-height: 20px;
   border: 0px solid white;
+  opacity: 0.65;
   font-family: "Lucida Console", Monaco, monospace;
-  margin: 0px 2px 2px 2px;
+  margin: 0;
   transition: background 0.2s, color 0.2s;
 }
 
